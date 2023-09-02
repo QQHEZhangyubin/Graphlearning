@@ -9,6 +9,9 @@
 GLuint renderingProgram;
 GLuint vao[numVAOs];
 
+float x = 0.0f; // 三角形在x轴的位置
+float inc = 0.01f; // 移动三角形的偏移量
+
 void printShaderLog(GLuint shader)
 {
     int len = 0;
@@ -127,9 +130,29 @@ void init(GLFWwindow *window)
 
 void display(GLFWwindow *window, double currentTime)
 {
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);    
+
     glUseProgram(renderingProgram);
     // glPointSize(5.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   
+    x += inc;
+    if (x > 1.0f) 
+    {
+       inc = -0.01f; 
+    }
+
+    if (x < -1.0f)
+    {
+       inc = 0.01;
+    }
+    
+    GLuint offsetLoc = glGetUniformLocation(renderingProgram, "offset");
+    glProgramUniform1f(renderingProgram, offsetLoc, x);
+
+
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
@@ -140,8 +163,8 @@ int main()
         std::cout << "GLFW init failed !" << std::endl;
         exit(EXIT_FAILURE);
     }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // MAC OSX needs
 
@@ -159,6 +182,13 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
+    // 获取openGL版本信息
+    int glVersion[2] = {-1, -1};
+    glGetIntegerv(GL_MAJOR_VERSION, &glVersion[0]);
+    glGetIntegerv(GL_MINOR_VERSION, &glVersion[1]);
+    std::cout << "OpenGL version: " << glVersion[0] << "." << glVersion[1] << std::endl;
+    
 
     glfwSwapInterval(1);
     init(window);
